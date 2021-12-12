@@ -1,25 +1,70 @@
-import logo from './logo.svg';
-import './App.css';
+import { useMemo, useCallback } from "react";
+import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
+import {
+  ConnectionProvider,
+  WalletProvider,
+  useWallet,
+} from "@solana/wallet-adapter-react";
+import { getPhantomWallet } from "@solana/wallet-adapter-wallets";
+import { clusterApiUrl } from "@solana/web3.js";
+import useWalletNftsWithMeta from "./useWalletNftsWithMeta";
 
-function App() {
+export function Home() {
+  const wallet = useWallet();
+  const publicAddress = useMemo(
+    () => wallet?.publicKey?.toString() || "",
+    [wallet]
+  );
+  const { nfts } = useWalletNftsWithMeta();
+
+  const renderNft = useCallback((nft) => {
+    if (nft?.meta?.image) {
+      return (
+        <img
+          alt="nft"
+          height="150"
+          key={nft.mint}
+          src={nft?.meta?.image}
+          style={{ background: "#333" }}
+          width="150"
+        />
+      );
+    }
+    return (
+      <div
+        key={nft.mint}
+        style={{
+          background: "#333",
+          display: "inline-block",
+          height: 150,
+          width: 150,
+        }}
+      />
+    );
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <div>{publicAddress}</div>
+      <hr />
+      <div style={{ display: "flex", gridGap: 10, flexWrap: "wrap" }}>
+        {nfts.map(renderNft)}
+      </div>
+    </>
   );
 }
 
-export default App;
+export default function App() {
+  const wallets = useMemo(() => [getPhantomWallet()], []);
+  const endpoint = useMemo(
+    () => clusterApiUrl(WalletAdapterNetwork.Devnet),
+    []
+  );
+  return (
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} onError={console.error} autoConnect>
+        <Home />
+      </WalletProvider>
+    </ConnectionProvider>
+  );
+}

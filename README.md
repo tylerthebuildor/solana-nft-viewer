@@ -3,7 +3,8 @@
 ## Setup
 
 ```bash
-git clone
+git clone git@github.com:tylerbuchea/solana-nft-viewer.git
+cd solana-nft-viewer
 yarn install
 yarn start
 ```
